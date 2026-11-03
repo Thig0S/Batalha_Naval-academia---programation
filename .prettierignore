@@ -1,0 +1,8 @@
+dist
+node_modules
+.angular
+coverage
+openspec
+.opencode
+.playwright-mcp
+package-lock.json

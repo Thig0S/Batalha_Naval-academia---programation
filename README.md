@@ -126,7 +126,7 @@ A experiência deve ser utilizável tanto em computadores quanto em dispositivos
 
 ## Desenvolvimento
 
-Requisitos: Node.js 26 ou superior e npm.
+Requisitos: Node.js 24 ou superior (validado com 24.21.0) e npm.
 
 ```bash
 npm install     # instala as dependências
@@ -145,3 +145,32 @@ npm run format:check  # apenas verifica a formatação
 
 A aplicação usa Angular 22.2 com componentes standalone e sem Zone.js (zoneless),
 estilização com Tailwind CSS 4 e ícones Lucide.
+
+## Tema
+
+As cores do jogo são tokens do Tailwind declarados em `src/styles.css` (`@theme`),
+o que gera utilitários como `bg-agua`, `text-acerto` e `border-tabuleiro-borda`.
+
+| Token                     | Uso                                           |
+| ------------------------- | --------------------------------------------- |
+| `--color-agua`            | ataque em célula sem embarcação               |
+| `--color-acerto`          | célula com parte de embarcação atingida       |
+| `--color-destruido`       | embarcação totalmente destruída               |
+| `--color-navio`           | posição de embarcação no tabuleiro do jogador |
+| `--color-tabuleiro`       | fundo do tabuleiro                            |
+| `--color-tabuleiro-borda` | grade e bordas do tabuleiro                   |
+
+Regra do projeto: **cor nunca é o único indicador**. Todo estado de célula (água,
+acerto, embarcação destruída) deve também trazer ícone, texto ou rótulo acessível
+(`aria-label`), para funcionar em daltonismo, alto contraste e leitores de tela.
+
+## Testes
+
+O runner é o Vitest integrado ao builder do Angular CLI (`npm test` roda uma vez,
+com `--watch=false`). Convenções:
+
+- Arquivos de teste ficam ao lado do código, como `*.spec.ts`.
+- Regras do jogo (tabuleiro, frota, turnos, ataques) devem ser funções puras de
+  TypeScript e testadas diretamente, sem `TestBed`.
+- `TestBed` é usado apenas quando o comportamento testado depende de renderização
+  ou de signals do Angular.

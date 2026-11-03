@@ -75,8 +75,9 @@ Cores do jogo declaradas como custom properties do Tailwind em `src/styles.css`:
 
 Cada componente importa os componentes de ícone que usa (`import { Anchor } from 'lucide-angular'`), em vez de um provider global com a biblioteca inteira.
 
-- **Por quê**: mantém o bundle pequeno e o uso explícito; `lucide-angular` 1.0.0 é recente e a API de import standalone é a mais estável.
+- **Por quê**: mantém o bundle pequeno e o uso explícito; a API de import por componente é a mais estável.
 - **Alternativa descartada**: `provideLucideIcons` com catálogo central — conveniente, porém arrasta ícones não usados e cria um ponto único de mudança.
+- **Fallback aplicado na implementação**: `lucide-angular@1.0.0` declara peer `@angular/common: 13.x - 21.x` e falha com `ERESOLVE` no Angular 22. Foi adotado `@lucide/angular@1.66.0` (peer `>=17`), mesmo conjunto de ícones, com componentes standalone baseados em signals. O import continua por componente (`LucideAnchor` → `<svg lucideAnchor>`).
 
 ### D7. Vitest pelo builder do Angular CLI
 

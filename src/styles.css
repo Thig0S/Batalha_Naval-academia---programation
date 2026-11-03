@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+/* Tokens de tema do jogo. Cada token vira utilitários Tailwind
+   (bg-agua, text-acerto, border-tabuleiro-borda, ...).
+   A cor nunca é o único indicador: sempre acompanhada de ícone e texto. */
+@theme {
+  --color-agua: #38bdf8;
+  --color-acerto: #fb923c;
+  --color-destruido: #ef4444;
+  --color-navio: #94a3b8;
+  --color-tabuleiro: #0f172a;
+  --color-tabuleiro-borda: #334155;
+}
