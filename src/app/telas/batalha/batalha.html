@@ -1,0 +1,19 @@
+<section class="flex flex-col gap-4">
+  <h2 class="text-xl font-bold tracking-tight text-slate-100">Batalha</h2>
+
+  <p class="max-w-prose text-sm text-slate-300">
+    A frota está posicionada. Os tiros, turnos e ataques chegam na próxima fase; por enquanto, os
+    tabuleiros estão somente leitura.
+  </p>
+
+  <div class="flex flex-col gap-6 md:flex-row">
+    <div class="flex w-full flex-col gap-2 md:max-w-lg">
+      <h3 class="font-semibold text-slate-100">Sua frota</h3>
+      <app-tabuleiro modo="proprio" [embarcacoes]="embarcacoesDoJogador()" />
+    </div>
+    <div class="flex w-full flex-col gap-2 md:max-w-lg">
+      <h3 class="font-semibold text-slate-100">Frota do computador</h3>
+      <app-tabuleiro modo="adversario" />
+    </div>
+  </div>
+</section>

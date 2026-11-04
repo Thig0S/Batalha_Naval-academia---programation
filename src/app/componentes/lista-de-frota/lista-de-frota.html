@@ -1,0 +1,29 @@
+<ul class="flex flex-col gap-2">
+  @for (tipo of tipos; track tipo) {
+    <li class="flex items-center gap-2">
+      <button
+        type="button"
+        [class]="classesDoItem(tipo)"
+        [attr.aria-pressed]="selecionado() === tipo"
+        (click)="selecao.emit(tipo)"
+      >
+        <span class="font-medium">{{ rotulos[tipo] }}</span>
+        <span
+          class="text-xs"
+          [class]="pendente(tipo) ? 'text-slate-400' : 'font-medium text-acerto'"
+        >
+          {{ pendente(tipo) ? 'Pendente' : 'Posicionado' }} · {{ tamanhos[tipo] }} células
+        </span>
+      </button>
+      @if (!pendente(tipo) && selecionado() === tipo) {
+        <button
+          type="button"
+          class="rounded-md border border-destruido px-3 py-2 text-sm font-medium text-destruido transition-colors hover:bg-destruido/10 focus-visible:outline-2 focus-visible:outline-acerto"
+          (click)="pedirRemocao(tipo)"
+        >
+          Remover
+        </button>
+      }
+    </li>
+  }
+</ul>

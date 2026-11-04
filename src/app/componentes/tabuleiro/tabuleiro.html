@@ -1,0 +1,39 @@
+<div class="w-full max-w-lg">
+  <div class="grid w-full grid-cols-[repeat(11,minmax(0,1fr))] gap-[3px]">
+    <span aria-hidden="true" class="aspect-square"></span>
+    @for (rotuloDeColuna of rotulosDeColuna; track rotuloDeColuna) {
+      <span
+        aria-hidden="true"
+        class="flex items-center justify-center text-[10px] font-medium text-slate-400 sm:text-xs"
+      >
+        {{ rotuloDeColuna }}
+      </span>
+    }
+    @for (linha of linhas(); track linha.letra) {
+      <span
+        aria-hidden="true"
+        class="flex items-center justify-center text-[10px] font-medium text-slate-400 sm:text-xs"
+      >
+        {{ linha.letra }}
+      </span>
+      @for (celula of linha.celulas; track celula.chave) {
+        <button
+          type="button"
+          [class]="celula.classes"
+          [attr.aria-label]="celula.rotuloAcessivel"
+          [attr.data-previa]="celula.previsao"
+          [disabled]="modo() !== 'preparacao'"
+          (click)="celulaSelecionada.emit(celula.coordenada)"
+          (focusin)="celulaFocada.emit(celula.coordenada)"
+          (focusout)="celulaFocada.emit(null)"
+          (pointerenter)="celulaFocada.emit(celula.coordenada)"
+          (pointerleave)="celulaFocada.emit(null)"
+        >
+          @if (celula.tipo) {
+            <svg lucideShip aria-hidden="true" class="h-3 w-3"></svg>
+          }
+        </button>
+      }
+    }
+  </div>
+</div>

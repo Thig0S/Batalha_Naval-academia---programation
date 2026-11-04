@@ -11,7 +11,19 @@
     </div>
   </header>
 
-  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6"></main>
+  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+    @switch (store.fase()) {
+      @case ('apresentacao') {
+        <app-apresentacao />
+      }
+      @case ('preparacao') {
+        <app-preparacao />
+      }
+      @case ('batalha') {
+        <app-batalha />
+      }
+    }
+  </main>
 
   <footer class="border-t border-tabuleiro-borda px-4 py-4 text-center text-xs text-slate-400">
     Projeto acadêmico desenvolvido com Angular

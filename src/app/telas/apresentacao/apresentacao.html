@@ -1,0 +1,34 @@
+<section class="flex flex-col items-start gap-6 py-4">
+  <h2 class="text-2xl font-bold tracking-tight text-slate-100">
+    Prepare a frota e afunde o computador
+  </h2>
+
+  <p class="max-w-prose text-sm text-slate-300 sm:text-base">
+    Uma batalha naval em um tabuleiro de linhas <span class="font-medium text-acerto">A–J</span> e
+    colunas <span class="font-medium text-acerto">1–10</span>. Posicione suas cinco embarcações,
+    descubra as dele e vença o duelo.
+  </p>
+
+  <h3 class="text-lg font-semibold text-slate-100">Como jogar</h3>
+  <ul class="flex max-w-prose flex-col gap-2 text-sm text-slate-300 sm:text-base">
+    <li>O computador já posiciona suas cinco embarcações em segredo antes da batalha.</li>
+    <li>
+      Você escolhe uma embarcação pendente, alterna a orientação e clica na célula que será a
+      âncora.
+    </li>
+    <li>
+      Posicionamentos inválidos aparecem com o motivo em texto, e é possível remover e reposicionar
+      depois.
+    </li>
+    <li>Com a frota completa, o botão "Iniciar batalha" é liberado e o combate começa.</li>
+  </ul>
+
+  <button
+    type="button"
+    (click)="store.iniciarPartida()"
+    class="flex items-center gap-2 rounded-lg bg-acerto px-5 py-3 font-semibold text-slate-950 transition-colors hover:bg-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+  >
+    <svg lucideShip aria-hidden="true" class="h-5 w-5"></svg>
+    Iniciar partida
+  </button>
+</section>
