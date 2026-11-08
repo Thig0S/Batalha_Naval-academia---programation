@@ -206,6 +206,25 @@ export class PartidaStore {
   }
 
   /**
+   * Reinicia a batalha mantendo a frota do jogador: cancela o timer, gera uma nova frota
+   * do computador e cria um combate novo, que começa no turno do jogador, sem tiros e sem
+   * vencedor, permanecendo na fase `batalha`. Se o combate não puder ser criado (frota do
+   * jogador inválida), devolve `false` sem alterar o estado.
+   */
+  jogarNovamente(): boolean {
+    this.cancelarAtaqueAgendado();
+    const novaFrota = gerarFrotaAleatoria(this.aleatorio);
+    const resultado = criarCombate(this._tabuleiroJogador(), novaFrota);
+    if (!resultado.ok) {
+      return false;
+    }
+    this._tabuleiroComputador.set(novaFrota);
+    this._estadoCombate.set(resultado.combate);
+    this._fase.set('batalha');
+    return true;
+  }
+
+  /**
    * Embarcações do lado defensor que perderam todas as posições, devolvidas como objetos
    * completos para a apresentação mostrar a embarcação destruída no mapa. Reaproveita
    * `tiposDestruidos` do domínio; nenhuma regra de combate é duplicada ou alterada.

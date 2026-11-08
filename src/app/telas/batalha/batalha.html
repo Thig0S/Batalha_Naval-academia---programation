@@ -70,6 +70,15 @@
     }
   </ul>
 
+  @if (popupVisivel()) {
+    <app-modal-fim-de-jogo
+      [vencedor]="store.vencedor()"
+      (jogarNovamente)="jogarNovamente()"
+      (prepararNovaFrota)="prepararNovaFrota()"
+      (fechar)="fecharPopup()"
+    />
+  }
+
   @if (store.vencedor(); as vencedor) {
     <div
       class="flex flex-col items-start gap-3 rounded-lg border border-tabuleiro-borda bg-slate-900 p-4"
@@ -77,14 +86,24 @@
       <p role="status" class="text-lg font-semibold text-slate-100">
         {{ vencedor === 'jogador' ? 'Você venceu a partida!' : 'O computador venceu a partida.' }}
       </p>
-      <button
-        type="button"
-        (click)="novaPartida()"
-        class="flex w-fit items-center gap-2 rounded-lg bg-acerto px-5 py-3 font-semibold text-slate-950 transition-colors hover:bg-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
-      >
-        <svg lucideRotateCcw aria-hidden="true" class="h-5 w-5"></svg>
-        Nova partida
-      </button>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          (click)="jogarNovamente()"
+          class="flex w-fit items-center gap-2 rounded-lg bg-acerto px-5 py-3 font-semibold text-slate-950 transition-colors hover:bg-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+        >
+          <svg lucideRotateCcw aria-hidden="true" class="h-5 w-5"></svg>
+          Jogar novamente
+        </button>
+        <button
+          type="button"
+          (click)="prepararNovaFrota()"
+          class="flex w-fit items-center gap-2 rounded-lg border border-tabuleiro-borda px-5 py-3 font-semibold text-slate-100 transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+        >
+          <svg lucideTarget aria-hidden="true" class="h-5 w-5"></svg>
+          Preparar nova frota
+        </button>
+      </div>
     </div>
   }
 </section>

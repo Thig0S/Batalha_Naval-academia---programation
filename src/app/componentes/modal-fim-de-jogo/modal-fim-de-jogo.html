@@ -1,0 +1,52 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
+  tabindex="-1"
+  (keydown.escape)="fechar.emit()"
+>
+  <div
+    #painel
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'titulo-fim-de-jogo'"
+    tabindex="-1"
+    class="flex w-full max-w-md flex-col gap-4 rounded-lg border border-tabuleiro-borda bg-slate-900 p-6 focus:outline-none"
+  >
+    <div class="flex items-center gap-3">
+      @if (vencedor() === 'jogador') {
+        <svg lucideTrophy aria-hidden="true" class="h-6 w-6 shrink-0 text-acerto"></svg>
+      } @else {
+        <svg lucideSkull aria-hidden="true" class="h-6 w-6 shrink-0 text-destruido"></svg>
+      }
+      <h2 id="titulo-fim-de-jogo" class="text-lg font-bold text-slate-100">{{ titulo() }}</h2>
+    </div>
+
+    <p class="text-sm text-slate-300">O que você deseja fazer agora?</p>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <button
+        type="button"
+        (click)="jogarNovamente.emit()"
+        class="flex items-center justify-center gap-2 rounded-lg bg-acerto px-5 py-3 font-semibold text-slate-950 transition-colors hover:bg-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+      >
+        <svg lucideRotateCcw aria-hidden="true" class="h-5 w-5"></svg>
+        Jogar novamente
+      </button>
+      <button
+        type="button"
+        (click)="prepararNovaFrota.emit()"
+        class="flex items-center justify-center gap-2 rounded-lg border border-tabuleiro-borda bg-slate-800 px-5 py-3 font-semibold text-slate-100 transition-colors hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+      >
+        <svg lucideTarget aria-hidden="true" class="h-5 w-5"></svg>
+        Preparar nova frota
+      </button>
+      <button
+        type="button"
+        (click)="fechar.emit()"
+        class="flex items-center justify-center gap-2 rounded-lg border border-tabuleiro-borda px-5 py-3 font-semibold text-slate-300 transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+      >
+        <svg lucideX aria-hidden="true" class="h-5 w-5"></svg>
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { LucideBomb, LucideCrosshair, LucideRotateCcw, LucideWaves } from '@lucide/angular';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  LucideBomb,
+  LucideCrosshair,
+  LucideRotateCcw,
+  LucideTarget,
+  LucideWaves,
+} from '@lucide/angular';
+import { ModalFimDeJogo } from '../../componentes/modal-fim-de-jogo/modal-fim-de-jogo';
 import { Tabuleiro } from '../../componentes/tabuleiro/tabuleiro';
 import { Coordenada } from '../../core/coordenada';
 import { ResultadoTiro } from '../../core/combate';
@@ -20,11 +27,20 @@ interface ItemDeLegenda {
 /**
  * Tela de batalha: indicador de turno e situação, aviso em região viva, os dois tabuleiros
  * ligados à store — o do jogador com os ataques recebidos e o adversário aceitando ataques
- * só no turno do jogador —, legenda dos resultados e o reinício após o encerramento.
+ * só no turno do jogador —, legenda dos resultados e o encerramento com o pop-up modal e a
+ * barra de situação final que mantém as opções de reinício sempre à mão.
  */
 @Component({
   selector: 'app-batalha',
-  imports: [Tabuleiro, LucideWaves, LucideCrosshair, LucideBomb, LucideRotateCcw],
+  imports: [
+    Tabuleiro,
+    ModalFimDeJogo,
+    LucideWaves,
+    LucideCrosshair,
+    LucideBomb,
+    LucideRotateCcw,
+    LucideTarget,
+  ],
   templateUrl: './batalha.html',
 })
 export class Batalha {
@@ -32,6 +48,23 @@ export class Batalha {
 
   /** Motivo do último ataque rejeitado ou anúncio da embarcação destruída. */
   protected readonly aviso = signal<string | null>(null);
+
+  /** Indica se o jogador dispensou o pop-up de fim de jogo da partida atual. */
+  protected readonly popupFechado = signal(false);
+
+  /** O pop-up fica visível enquanto há vencedor e o jogador não o dispensou. */
+  protected readonly popupVisivel = computed(
+    () => this.store.vencedor() !== null && !this.popupFechado(),
+  );
+
+  constructor() {
+    // Um novo combate (vencedor voltando a `null`) recoloca o pop-up no próximo fim de jogo.
+    effect(() => {
+      if (this.store.vencedor() === null) {
+        this.popupFechado.set(false);
+      }
+    });
+  }
 
   /** Legenda dos três resultados, sempre acompanhada de ícone e texto. */
   protected readonly legenda: readonly ItemDeLegenda[] = [
@@ -89,9 +122,21 @@ export class Batalha {
     );
   }
 
-  /** Reinicia a partida pela preparação, limpando o aviso da região viva. */
-  protected novaPartida(): void {
+  /** Volta à preparação com o tabuleiro vazio, limpando o aviso da região viva. */
+  protected prepararNovaFrota(): void {
     this.aviso.set(null);
     this.store.novaPartida();
+  }
+
+  /** Começa nova batalha com a frota do jogador preservada, limpando aviso e pop-up. */
+  protected jogarNovamente(): void {
+    this.aviso.set(null);
+    this.popupFechado.set(false);
+    this.store.jogarNovamente();
+  }
+
+  /** Dispensa o pop-up para inspecionar o tabuleiro; a barra mantém as opções de reinício. */
+  protected fecharPopup(): void {
+    this.popupFechado.set(true);
   }
 }

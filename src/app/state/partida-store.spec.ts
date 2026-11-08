@@ -9,6 +9,9 @@ import { ATRASO_COMPUTADOR_MS, PartidaStore } from './partida-store';
 import { atacarValido, celulaLivreDoComputador } from './testes/ataques';
 import { posicionarFrotaNaStore } from './testes/frota-do-jogador';
 
+/** Semente em que o computador destrói toda a frota do jogador na 53ª rodada. */
+const SEMENTE_DA_DERROTA = 15514;
+
 /** Cria uma store com o gerador de números aleatórios sobrescrito por um PRNG fixo. */
 async function criarStore(semente: number): Promise<PartidaStore> {
   await TestBed.configureTestingModule({
@@ -348,5 +351,63 @@ describe('PartidaStore', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('jogar novamente mantém a frota do jogador, gera frota nova do computador e zera o combate', async () => {
+    const store = await criarBatalha();
+    const frotaDoJogador = store.tabuleiroJogador();
+    const frotaDoComputador = store.tabuleiroComputador();
+    atacarValido(store, celulaLivreDoComputador(store)); // deixa histórico e timer pendente
+
+    expect(store.jogarNovamente()).toBe(true);
+
+    expect(store.fase()).toBe('batalha');
+    expect(store.combateAtivo()).toBe(true);
+    expect(store.turno()).toBe('jogador');
+    expect(store.vencedor()).toBeNull();
+    expect(store.tirosRecebidosPeloJogador()).toEqual([]);
+    expect(store.tirosRecebidosPeloComputador()).toEqual([]);
+    expect(store.tabuleiroJogador()).toEqual(frotaDoJogador);
+    expect(store.tabuleiroComputador().embarcacoes).not.toEqual(frotaDoComputador.embarcacoes);
+  });
+
+  it('permite jogar novamente logo após uma derrota', async () => {
+    const store = await criarBatalha(SEMENTE_DA_DERROTA);
+    vi.useFakeTimers();
+    try {
+      for (let rodada = 0; rodada < 80 && store.vencedor() === null; rodada++) {
+        atacarValido(store, celulaLivreDoComputador(store));
+        if (store.vencedor() !== null) {
+          break;
+        }
+        vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
+      }
+      expect(store.vencedor()).toBe('computador');
+      const frotaDoJogador = store.tabuleiroJogador();
+
+      expect(store.jogarNovamente()).toBe(true);
+
+      expect(store.fase()).toBe('batalha');
+      expect(store.turno()).toBe('jogador');
+      expect(store.vencedor()).toBeNull();
+      expect(store.tirosRecebidosPeloJogador()).toEqual([]);
+      expect(store.tirosRecebidosPeloComputador()).toEqual([]);
+      expect(store.tabuleiroJogador()).toEqual(frotaDoJogador);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('jogar novamente devolve false sem alterar estado quando a frota do jogador é inválida', async () => {
+    const store = await criarStore(42);
+    store.iniciarPartida();
+    posicionarFrotaNaStore(store, ['destroyer']); // frota incompleta não permite criar combate
+
+    expect(store.jogarNovamente()).toBe(false);
+
+    expect(store.fase()).toBe('preparacao');
+    expect(store.estadoCombate()).toBeNull();
+    expect(store.tabuleiroJogador().embarcacoes).toHaveLength(4);
+    expect(store.tabuleiroComputador().embarcacoes).toHaveLength(5);
   });
 });

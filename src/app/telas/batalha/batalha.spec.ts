@@ -50,6 +50,58 @@ function aviso(elemento: HTMLElement): string {
   return elemento.querySelector('[aria-live="polite"]')?.textContent?.trim() ?? '';
 }
 
+/** Botão do pop-up de fim de jogo com o rótulo indicado. */
+function botaoDoPopup(elemento: HTMLElement, rotulo: string): HTMLButtonElement {
+  const dialogo = elemento.querySelector('[role="dialog"]');
+  if (dialogo === null) {
+    throw new Error('Pop-up de fim de jogo não encontrado.');
+  }
+  const botao = [...dialogo.querySelectorAll<HTMLButtonElement>('button')].find((botao) =>
+    botao.textContent?.includes(rotulo),
+  );
+  if (botao === undefined) {
+    throw new Error(`Botão "${rotulo}" não encontrado no pop-up.`);
+  }
+  return botao;
+}
+
+/** Botão fora do pop-up — o da barra de situação final — com o rótulo indicado. */
+function botaoForaDoPopup(elemento: HTMLElement, rotulo: string): HTMLButtonElement {
+  const botao = [...elemento.querySelectorAll<HTMLButtonElement>('button')].find(
+    (botao) => botao.textContent?.includes(rotulo) && botao.closest('[role="dialog"]') === null,
+  );
+  if (botao === undefined) {
+    throw new Error(`Botão "${rotulo}" não encontrado na barra de situação final.`);
+  }
+  return botao;
+}
+
+/**
+ * Vence a partida clicando em todas as posições ocupadas da frota do computador, devolvendo
+ * a vez ao computador entre os ataques. Requer timers falsos ativos.
+ */
+function vencerPartida(
+  fixture: ReturnType<typeof TestBed.createComponent<Batalha>>,
+  store: PartidaStore,
+  elemento: HTMLElement,
+): void {
+  const alvos = store
+    .tabuleiroComputador()
+    .embarcacoes.flatMap(coordenadasDe)
+    .map((coordenada) => ({ ...coordenada }));
+
+  for (const alvo of alvos) {
+    celulaAdversaria(elemento, alvo).click();
+    fixture.detectChanges();
+    if (store.vencedor() !== null) {
+      return;
+    }
+    vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
+    fixture.detectChanges();
+  }
+  throw new Error('Esperava que o jogador vencesse a partida.');
+}
+
 describe('Batalha', () => {
   it('mostra as cinco embarcações no tabuleiro do jogador e nada no do computador', async () => {
     await TestBed.configureTestingModule({
@@ -91,7 +143,8 @@ describe('Batalha', () => {
     expect(texto(elemento)).toContain('Acerto');
     expect(texto(elemento)).toContain('Embarcação destruída');
     expect(elemento.querySelector('[aria-live="polite"]')).not.toBeNull();
-    expect(texto(elemento)).not.toContain('Nova partida');
+    expect(texto(elemento)).not.toContain('Jogar novamente');
+    expect(texto(elemento)).not.toContain('Preparar nova frota');
   });
 
   it('clique no tabuleiro adversário ataca e o clique repetido avisa sem consumir o turno', async () => {
@@ -251,13 +304,11 @@ describe('Batalha', () => {
       expect(celulasDo(elemento, 0).every((celula) => celula.disabled)).toBe(true);
       expect(celulasDo(elemento, 1).every((celula) => celula.disabled)).toBe(true);
 
-      const reiniciar = [...elemento.querySelectorAll<HTMLButtonElement>('button')].find((botao) =>
-        botao.textContent?.includes('Nova partida'),
-      );
-      if (reiniciar === undefined) {
-        throw new Error('Botão "Nova partida" não encontrado.');
-      }
-      reiniciar.click();
+      const dialogo = elemento.querySelector('[role="dialog"]');
+      expect(dialogo).not.toBeNull();
+      expect(dialogo?.getAttribute('aria-modal')).toBe('true');
+
+      botaoDoPopup(elemento, 'Preparar nova frota').click();
       fixture.detectChanges();
 
       expect(store.fase()).toBe('preparacao');
@@ -306,6 +357,133 @@ describe('Batalha', () => {
       const aposOFim = store.atacarJogador(celulaLivreDoComputador(store));
       expect(aposOFim).toEqual({ ok: false, motivo: 'combate-encerrado' });
       expect(store.tirosRecebidosPeloComputador()).toHaveLength(antes);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('exibe o pop-up no fim de jogo e "Fechar" o dispensa mantendo a barra com as duas opções', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      vencerPartida(fixture, store, elemento);
+
+      const dialogo = elemento.querySelector('[role="dialog"]');
+      expect(dialogo).not.toBeNull();
+      expect(dialogo?.getAttribute('aria-modal')).toBe('true');
+      expect(dialogo?.textContent).toContain('Você venceu a partida!');
+
+      botaoDoPopup(elemento, 'Fechar').click();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+      expect(texto(elemento)).toContain('Você venceu a partida!');
+      expect(botaoForaDoPopup(elemento, 'Jogar novamente')).toBeTruthy();
+      expect(botaoForaDoPopup(elemento, 'Preparar nova frota')).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('"Esc" dispensa o pop-up mantendo a barra com as duas opções', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      vencerPartida(fixture, store, elemento);
+
+      const dialogo = elemento.querySelector('[role="dialog"]');
+      expect(dialogo).not.toBeNull();
+      if (dialogo === null) {
+        throw new Error('Pop-up de fim de jogo não encontrado.');
+      }
+      dialogo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+      expect(texto(elemento)).toContain('Você venceu a partida!');
+      expect(botaoForaDoPopup(elemento, 'Jogar novamente')).toBeTruthy();
+      expect(botaoForaDoPopup(elemento, 'Preparar nova frota')).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('"Jogar novamente" começa nova batalha com a frota do jogador preservada, zero tiros e nenhum vencedor', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      vencerPartida(fixture, store, elemento);
+      const frotaDoJogador = store.tabuleiroJogador();
+      const frotaDoComputador = store.tabuleiroComputador();
+
+      botaoDoPopup(elemento, 'Jogar novamente').click();
+      fixture.detectChanges();
+
+      expect(store.fase()).toBe('batalha');
+      expect(store.vencedor()).toBeNull();
+      expect(store.turno()).toBe('jogador');
+      expect(store.tirosRecebidosPeloJogador()).toEqual([]);
+      expect(store.tirosRecebidosPeloComputador()).toEqual([]);
+      expect(store.tabuleiroJogador()).toEqual(frotaDoJogador);
+      expect(store.tabuleiroComputador().embarcacoes).not.toEqual(frotaDoComputador.embarcacoes);
+      // sem vencedor não há pop-up nem barra de situação final
+      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+      const semSaida = [...elemento.querySelectorAll<HTMLButtonElement>('button')].some(
+        (botao) =>
+          botao.textContent?.includes('Jogar novamente') ||
+          botao.textContent?.includes('Preparar nova frota'),
+      );
+      expect(semSaida).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reexibe o pop-up ao fim da nova partida depois de dispensá-lo e jogar novamente', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      vencerPartida(fixture, store, elemento);
+      botaoDoPopup(elemento, 'Fechar').click();
+      fixture.detectChanges();
+      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+
+      botaoForaDoPopup(elemento, 'Jogar novamente').click();
+      fixture.detectChanges();
+      expect(store.vencedor()).toBeNull();
+
+      vencerPartida(fixture, store, elemento);
+
+      const dialogo = elemento.querySelector('[role="dialog"]');
+      expect(dialogo).not.toBeNull();
+      expect(dialogo?.textContent).toContain('Você venceu a partida!');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reexibe o pop-up no fim da partida seguinte depois de dispensá-lo e preparar nova frota', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      vencerPartida(fixture, store, elemento);
+      botaoDoPopup(elemento, 'Fechar').click();
+      fixture.detectChanges();
+
+      // dispensado, o pop-up só volta se o estado "fechado" for resetado ao novo combate
+      botaoForaDoPopup(elemento, 'Preparar nova frota').click();
+      fixture.detectChanges();
+      expect(store.fase()).toBe('preparacao');
+
+      posicionarFrotaNaStore(store);
+      store.iniciarBatalha();
+      fixture.detectChanges();
+
+      vencerPartida(fixture, store, elemento);
+
+      const dialogo = elemento.querySelector('[role="dialog"]');
+      expect(dialogo).not.toBeNull();
+      expect(dialogo?.textContent).toContain('Você venceu a partida!');
     } finally {
       vi.useRealTimers();
     }
