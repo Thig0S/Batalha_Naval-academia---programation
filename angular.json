@@ -71,6 +71,14 @@
           "options": {
             "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy",
+          "options": {
+            "baseHref": "https://github.com/Thig0S.github.io/Batalha_Naval-academia---programation/",
+            "name": "Thiago Kowalski",
+            "email": "thiagokovalski5@gmail.com"
+          }
         }
       }
     }
