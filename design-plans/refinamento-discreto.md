@@ -2,7 +2,7 @@
 
 Written against: `b8de7fe3b4bf4fe20bfb6f716b10eaaed26f3f4f`.
 
-Status: plano solicitado pelo usuário, pronto para implementação posterior. Não implementado.
+Status: implementado nas três páginas em 2026-11-08, após autorização do usuário.
 
 ## Evidence chain
 
@@ -70,3 +70,11 @@ Implementar uma fase por vez, validar e apresentar o resultado antes de avançar
 ## Design documentation
 
 - After acceptance and validation: nenhuma alteração de documentação do produto é necessária. Registrar execução e validação neste plano, sem inventar um design system novo.
+
+## Execução e validação — 2026-11-08
+
+- Fases 1, 2 e 3 implementadas nos três templates previstos. Paleta, tabuleiros, lógica, shell, lista de frota e modal não foram alterados.
+- `npm run lint`, `npm test` (150 testes em 16 arquivos), `npm run build`, verificação Prettier dos três templates e `git diff --check` passaram.
+- Navegador local em `http://127.0.0.1:4200`: apresentação conferida em 375 px, com quatro instruções e botão fora do painel; preparação e combate conferidos em 375, 768 e 1440 px sem rolagem horizontal. Na preparação, seleção com Remover permanece dentro do painel; no combate, grades preservam 343 px em mobile e 512 px em desktop.
+- Exercitados pelo navegador: posicionamento, seleção, remoção, orientação, rejeição fora do tabuleiro, frota completa, ataque com retaliação, vitória, popup em 375 px, fechamento e Jogar novamente. Para chegar à vitória, a automação leu as coordenadas adversárias pela API de depuração local do Angular e realizou os ataques pelos botões; não alterou o estado diretamente nem o código do jogo.
+- Limites: derrota e ação Preparar nova frota não foram repetidas manualmente no navegador nesta execução; a suíte existente passou integralmente. Não houve deploy.

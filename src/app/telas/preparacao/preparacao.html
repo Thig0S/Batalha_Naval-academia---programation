@@ -2,47 +2,51 @@
   <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
     <div class="flex min-w-0 flex-col gap-4">
       <h2 class="text-xl font-bold tracking-tight text-slate-100">Posicione sua frota</h2>
-      <app-lista-de-frota
-        [pendentes]="store.tiposPendentes()"
-        [selecionado]="tipoSelecionado()"
-        (selecao)="selecionarTipo($event)"
-        (remocao)="removerSelecionada()"
-      />
+      <div
+        class="flex min-w-0 flex-col gap-4 rounded-lg border border-tabuleiro-borda bg-slate-900 p-4"
+      >
+        <app-lista-de-frota
+          [pendentes]="store.tiposPendentes()"
+          [selecionado]="tipoSelecionado()"
+          (selecao)="selecionarTipo($event)"
+          (remocao)="removerSelecionada()"
+        />
 
-      <div aria-live="polite" class="min-h-6 text-sm font-medium text-destruido">
-        @if (aviso()) {
-          <p>{{ aviso() }}</p>
-        }
-      </div>
+        <div aria-live="polite" class="min-h-6 text-sm font-medium text-destruido">
+          @if (aviso()) {
+            <p>{{ aviso() }}</p>
+          }
+        </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="mr-1 text-sm text-slate-400">Orientação:</span>
-        <button
-          type="button"
-          class="rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-acerto"
-          [class]="
-            orientacao() === 'horizontal'
-              ? 'border-acerto bg-acerto/10 font-medium text-slate-100'
-              : 'border-tabuleiro-borda text-slate-300 hover:border-slate-500'
-          "
-          [attr.aria-pressed]="orientacao() === 'horizontal'"
-          (click)="alternarOrientacao('horizontal')"
-        >
-          Horizontal
-        </button>
-        <button
-          type="button"
-          class="rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-acerto"
-          [class]="
-            orientacao() === 'vertical'
-              ? 'border-acerto bg-acerto/10 font-medium text-slate-100'
-              : 'border-tabuleiro-borda text-slate-300 hover:border-slate-500'
-          "
-          [attr.aria-pressed]="orientacao() === 'vertical'"
-          (click)="alternarOrientacao('vertical')"
-        >
-          Vertical
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="mr-1 text-sm text-slate-400">Orientação:</span>
+          <button
+            type="button"
+            class="rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-acerto"
+            [class]="
+              orientacao() === 'horizontal'
+                ? 'border-acerto bg-acerto/10 font-medium text-slate-100'
+                : 'border-tabuleiro-borda text-slate-300 hover:border-slate-500'
+            "
+            [attr.aria-pressed]="orientacao() === 'horizontal'"
+            (click)="alternarOrientacao('horizontal')"
+          >
+            Horizontal
+          </button>
+          <button
+            type="button"
+            class="rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-acerto"
+            [class]="
+              orientacao() === 'vertical'
+                ? 'border-acerto bg-acerto/10 font-medium text-slate-100'
+                : 'border-tabuleiro-borda text-slate-300 hover:border-slate-500'
+            "
+            [attr.aria-pressed]="orientacao() === 'vertical'"
+            (click)="alternarOrientacao('vertical')"
+          >
+            Vertical
+          </button>
+        </div>
       </div>
     </div>
     <div class="flex min-w-0 flex-col gap-4">
