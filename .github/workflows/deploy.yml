@@ -4,13 +4,24 @@ on:
   push:
     branches:
       - main
+      - master
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
 
     steps:
       - name: Baixar código
@@ -25,5 +36,17 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Gerar versão de produção
+        run: npm run build -- --base-href /Batalha_Naval-academia---programation/
+
+      - name: Enviar arquivos do site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/batalhanaval/browser
+
       - name: Publicar no GitHub Pages
-        run: npx ng deploy --no-silent
+        id: publicacao
+        uses: actions/deploy-pages@v4

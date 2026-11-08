@@ -146,6 +146,21 @@ npm run format:check  # apenas verifica a formatação
 A aplicação usa Angular 22.2 com componentes standalone e sem Zone.js (zoneless),
 estilização com Tailwind CSS 4 e ícones Lucide.
 
+## Deploy automático
+
+O workflow `.github/workflows/deploy.yml` gera e publica o site no GitHub Pages a
+cada push em `main` ou `master`. Também pode ser executado manualmente pela aba
+**Actions**, em **Deploy para GitHub Pages → Run workflow**.
+
+Para ativar, envie o workflow ao GitHub e, em **Settings → Pages → Build and
+deployment → Source**, selecione **GitHub Actions**. Se o ambiente `github-pages`
+tiver restrições de branches, permita tanto `main` quanto `master` em
+**Settings → Environments → github-pages**.
+
+A publicação usa o `GITHUB_TOKEN` automático, sem precisar cadastrar um token
+pessoal. O build publicado é o conteúdo de `dist/batalhanaval/browser`, com o
+caminho base `/Batalha_Naval-academia---programation/`.
+
 ## Tema
 
 As cores do jogo são tokens do Tailwind declarados em `src/styles.css` (`@theme`),
