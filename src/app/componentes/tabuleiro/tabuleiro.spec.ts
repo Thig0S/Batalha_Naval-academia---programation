@@ -39,6 +39,7 @@ async function renderizar(
   modo: ModoTabuleiro,
   opcoes: {
     embarcacoes?: readonly Embarcacao[];
+    embarcacoesDestruidas?: readonly Embarcacao[];
     previsao?: PrevisaoDePosicionamento | null;
     tiros?: readonly Tiro[];
     interativo?: boolean;
@@ -49,6 +50,9 @@ async function renderizar(
   fixture.componentRef.setInput('modo', modo);
   if (opcoes.embarcacoes !== undefined) {
     fixture.componentRef.setInput('embarcacoes', opcoes.embarcacoes);
+  }
+  if (opcoes.embarcacoesDestruidas !== undefined) {
+    fixture.componentRef.setInput('embarcacoesDestruidas', opcoes.embarcacoesDestruidas);
   }
   if (opcoes.previsao !== undefined) {
     fixture.componentRef.setInput('previsao', opcoes.previsao);
@@ -186,6 +190,61 @@ describe('Tabuleiro', () => {
       expect(celula.getAttribute('aria-label')).not.toContain('encouraçado');
     }
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('button svg')).toHaveLength(2);
+  });
+
+  it('no modo próprio a embarcação destruída aparece completa, mesmo com acertos registrados', async () => {
+    const fixture = await renderizar('proprio', {
+      embarcacoes: [ENCOURACADO],
+      embarcacoesDestruidas: [ENCOURACADO],
+      // Só a última posição registra destruição; as demais foram acertos.
+      tiros: [TIRO_ACERTO, TIRO_DESTRUIDO],
+    });
+    const celulas = botoes(fixture);
+
+    // A1..A4 todas exibem o resultado destruída, com tipo no rótulo e ícone próprio.
+    for (const indice of [0, 1, 2, 3]) {
+      const celula = celulas[indice];
+      expect(celula.getAttribute('aria-label')).toBe(
+        `${['A1', 'A2', 'A3', 'A4'][indice]}, encouraçado, embarcação destruída`,
+      );
+      expect(celula.className).toContain('bg-destruido');
+      expect(celula.querySelector('svg')?.classList.contains('lucide-bomb')).toBe(true);
+    }
+
+    // Célula fora da embarcação não é afetada.
+    expect(celulas[4].getAttribute('aria-label')).toBe('A5');
+  });
+
+  it('no modo adversário revela apenas as embarcações destruídas, por inteiro', async () => {
+    const destruido: Embarcacao = {
+      tipo: 'destroyer',
+      linha: 2,
+      coluna: 2,
+      orientacao: 'vertical',
+    };
+    const fixture = await renderizar('adversario', {
+      embarcacoes: [ENCOURACADO],
+      embarcacoesDestruidas: [destruido],
+      tiros: [{ coordenada: { linha: 2, coluna: 2 }, resultado: 'destruido', tipo: 'destroyer' }],
+    });
+    const celulas = botoes(fixture);
+
+    // As 2 células do destroyer aparecem completas com o tipo no rótulo.
+    for (const [linha, coluna] of [
+      [2, 2],
+      [3, 2],
+    ]) {
+      const celula = celulas[linha * 10 + coluna];
+      expect(celula.getAttribute('aria-label')).toMatch(
+        /^[C-J]\d+, destroyer, embarcação destruída$/,
+      );
+      expect(celula.className).toContain('bg-destruido');
+    }
+
+    // Nenhuma outra célula revela embarcação: o encouraçado segue oculto.
+    for (const celula of botoes(fixture)) {
+      expect(celula.getAttribute('aria-label')).not.toContain('encouraçado');
+    }
   });
 
   it('sem o input interativo, as células continuam desabilitadas mesmo com tiros', async () => {

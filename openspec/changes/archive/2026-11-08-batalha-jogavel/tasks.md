@@ -30,6 +30,13 @@
 - [x] 4.2 Rodar `npm run lint` e `npm run format:check` e corrigir o que for apontado.
 - [x] 4.3 Rodar `npm run build` e confirmar o build de produção sem erros.
 
+## 5. Espera perceptível e embarcação destruída completa
+
+- [x] 5.1 Aumentar `ATRASO_COMPUTADOR_MS` para 1200 ms e exibir "O computador está atacando…" na região `aria-live` durante a espera, derivado do turno sem estado novo; verificar com timers falsos que o aviso aparece durante o atraso e some quando o contra-ataque devolve o turno.
+- [x] 5.2 Expor na `PartidaStore` as `embarcacoesDestruidasDoComputador` e `embarcacoesDestruidasDoJogador` derivadas de `tiposDestruidos`, sem alterar o domínio; verificar com testes de store antes e depois da destruição.
+- [x] 5.3 Estender o `Tabuleiro` com o input `embarcacoesDestruidas`, marcando todas as células da embarcação como destruída (fundo, ícone e rótulo com o tipo) e, no modo `adversario`, revelando apenas as embarcações já destruídas; verificar com testes de componente nos dois modos.
+- [x] 5.4 Atualizar a tela de batalha para os novos inputs e o aviso de espera e rodar `npm test`, `npm run lint`, `npm run format:check` e `npm run build`.
+
 ## Workflow follow-up
 
 - Arquivar o change após a revisão e a implementação serem concluídas.

@@ -19,9 +19,12 @@
     </p>
   </div>
 
-  <div aria-live="polite" class="min-h-6 text-sm font-medium text-destruido">
+  <div aria-live="polite" class="min-h-6 text-sm font-medium">
+    @if (aguardandoComputador()) {
+      <p class="text-slate-300">O computador está atacando…</p>
+    }
     @if (aviso(); as avisoAtual) {
-      <p>{{ avisoAtual }}</p>
+      <p class="text-destruido">{{ avisoAtual }}</p>
     }
   </div>
 
@@ -31,6 +34,7 @@
       <app-tabuleiro
         modo="proprio"
         [embarcacoes]="embarcacoesDoJogador()"
+        [embarcacoesDestruidas]="store.embarcacoesDestruidasDoJogador()"
         [tirosRecebidos]="store.tirosRecebidosPeloJogador()"
       />
     </div>
@@ -38,6 +42,7 @@
       <h3 class="font-semibold text-slate-100">Frota do computador</h3>
       <app-tabuleiro
         modo="adversario"
+        [embarcacoesDestruidas]="store.embarcacoesDestruidasDoComputador()"
         [tirosRecebidos]="store.tirosRecebidosPeloComputador()"
         [interativo]="adversarioInterativo()"
         (celulaSelecionada)="aoClicarNoAdversario($event)"

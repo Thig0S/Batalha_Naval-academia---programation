@@ -8,8 +8,8 @@ O domínio de combate está pronto e testado, mas a aplicação ainda não permi
 
 - Integrar o combate à `PartidaStore`, criando o estado de combate ao iniciar a batalha e expondo turno, vencedor, tiros recebidos e tipos destruídos.
 - Permitir que o jogador ataque o tabuleiro do computador, rejeitando coordenadas repetidas sem consumir o turno.
-- Resolver o ataque automático do computador após um pequeno atraso, mantendo o tabuleiro bloqueado enquanto ele joga.
-- Exibir na tela de batalha: indicação de turno, resultado de cada ataque (água, acerto, embarcação destruída), aviso textual de destruição e tabuleiro próprio com os ataques recebidos.
+- Resolver o ataque automático do computador após um atraso perceptível, mantendo o tabuleiro bloqueado e avisando em texto que ele está jogando.
+- Exibir na tela de batalha: indicação de turno, resultado de cada ataque (água, acerto, embarcação destruída), aviso textual de destruição com a embarcação completa no mapa e tabuleiro próprio com os ataques recebidos.
 - Encerrar a partida imediatamente com vitória ou derrota, bloqueando novos ataques e anunciando o resultado.
 - Oferecer "Nova partida", reiniciando as frotas e voltando à preparação.
 - Cobrir store, integração e renderização com testes, mantendo as regras já validadas no domínio.

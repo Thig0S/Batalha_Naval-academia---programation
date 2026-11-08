@@ -107,11 +107,12 @@ describe('Batalha', () => {
       expect(store.tirosRecebidosPeloComputador()).toHaveLength(1);
       expect(celula.getAttribute('aria-label')).toContain('água');
       expect(texto(elemento)).toContain('Turno: Computador');
-      expect(aviso(elemento)).toBe('');
+      expect(aviso(elemento)).toBe('O computador está atacando…');
 
       vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
       fixture.detectChanges();
       expect(texto(elemento)).toContain('Turno: Você');
+      expect(aviso(elemento)).toBe('');
 
       celula.click();
       fixture.detectChanges();
@@ -142,44 +143,83 @@ describe('Batalha', () => {
       fixture.detectChanges();
 
       expect(store.tirosRecebidosPeloComputador()).toHaveLength(1);
-      expect(aviso(elemento)).toBe('');
+      expect(aviso(elemento)).toBe('O computador está atacando…');
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('anuncia a embarcação destruída com o tipo, marcando apenas as células atingidas', async () => {
+  it('exibe o aviso de espera durante todo o atraso e o remove quando o computador revida', async () => {
     const { fixture, store, elemento } = await criarTela();
     vi.useFakeTimers();
     try {
-      const destroyer = store
+      expect(aviso(elemento)).toBe('');
+
+      atacarValido(store, celulaLivreDoComputador(store));
+      fixture.detectChanges();
+      expect(aviso(elemento)).toBe('O computador está atacando…');
+
+      // Aviso presente durante toda a espera, mesmo faltando pouco para o contra-ataque.
+      vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS - 1);
+      fixture.detectChanges();
+      expect(aviso(elemento)).toBe('O computador está atacando…');
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      expect(aviso(elemento)).toBe('');
+      expect(store.turno()).toBe('jogador');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('anuncia a destruição e mostra a embarcação inimiga completa no mapa', async () => {
+    const { fixture, store, elemento } = await criarTela();
+    vi.useFakeTimers();
+    try {
+      const encouracado = store
         .tabuleiroComputador()
-        .embarcacoes.find((embarcacao) => embarcacao.tipo === 'destroyer');
-      if (destroyer === undefined) {
-        throw new Error('Destroyer não encontrada no tabuleiro do computador.');
+        .embarcacoes.find((embarcacao) => embarcacao.tipo === 'encouracado');
+      if (encouracado === undefined) {
+        throw new Error('Encouraçado não encontrado no tabuleiro do computador.');
       }
-      const [primeira, segunda] = coordenadasDe(destroyer);
+      const alvos = coordenadasDe(encouracado);
 
-      celulaAdversaria(elemento, primeira).click();
-      fixture.detectChanges();
-      vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
-      fixture.detectChanges();
-      celulaAdversaria(elemento, segunda).click();
-      fixture.detectChanges();
+      // Ataca as quatro posições, devolvendo a vez entre cada ataque.
+      for (const alvo of alvos) {
+        celulaAdversaria(elemento, alvo).click();
+        fixture.detectChanges();
+        if (store.vencedor() !== null) {
+          break;
+        }
+        vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
+        fixture.detectChanges();
+      }
 
-      expect(aviso(elemento)).toContain('Embarcação destruída: Destroyer');
+      expect(store.tiposDestruidosDoComputador()).toEqual(['encouracado']);
+      expect(aviso(elemento)).toContain('Embarcação destruída: Encouraçado');
       expect(texto(elemento)).toContain('do computador: 1/5');
 
-      const marcadas = celulasDo(elemento, 1).filter((celula) =>
+      // As quatro células do encouraçado aparecem completas como destruídas, com o tipo.
+      const adversarias = celulasDo(elemento, 1);
+      const marcadas = adversarias.filter((celula) =>
         celula.getAttribute('aria-label')?.includes(', '),
       );
-      expect(marcadas).toHaveLength(2); // só as duas posições efetivamente atingidas
+      expect(marcadas).toHaveLength(4);
       for (const celula of marcadas) {
-        expect(celula.getAttribute('aria-label')).not.toContain('destroyer');
+        expect(celula.getAttribute('aria-label')).toContain('encouraçado');
+        expect(celula.getAttribute('aria-label')).toContain('embarcação destruída');
+        expect(celula.className).toContain('bg-destruido');
+        expect(celula.querySelector('svg')?.classList.contains('lucide-bomb')).toBe(true);
       }
-      expect(celulasDo(elemento, 1).filter((celula) => celula.querySelector('svg'))).toHaveLength(
-        2,
-      );
+
+      // As embarcações ainda não destruídas continuam ocultas.
+      for (const celula of adversarias) {
+        const rotulo = celula.getAttribute('aria-label') ?? '';
+        if (!rotulo.includes(', ')) {
+          expect(rotulo).not.toMatch(/porta-aviões|cruzador|submarino|destroyer/);
+        }
+      }
     } finally {
       vi.useRealTimers();
     }
@@ -249,6 +289,18 @@ describe('Batalha', () => {
       expect(texto(elemento)).toContain('O computador venceu a partida.');
       expect(celulasDo(elemento, 0).every((celula) => celula.disabled)).toBe(true);
       expect(celulasDo(elemento, 1).every((celula) => celula.disabled)).toBe(true);
+
+      // A frota destruída do jogador aparece completa no tabuleiro próprio.
+      const proprias = celulasDo(elemento, 0);
+      const destruidas = proprias.filter((celula) =>
+        celula.getAttribute('aria-label')?.includes('embarcação destruída'),
+      );
+      expect(destruidas).toHaveLength(17); // as cinco embarcações, 17 células
+      expect(store.embarcacoesDestruidasDoJogador()).toHaveLength(5);
+      for (const celula of destruidas) {
+        expect(celula.className).toContain('bg-destruido');
+        expect(celula.querySelector('svg')?.classList.contains('lucide-bomb')).toBe(true);
+      }
 
       const antes = store.tirosRecebidosPeloComputador().length;
       const aposOFim = store.atacarJogador(celulaLivreDoComputador(store));

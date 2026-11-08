@@ -1,10 +1,10 @@
-# Spec Delta
+# batalha-jogavel Specification
 
 ## Purpose
 
 Conduz a partida na interface: o jogador ataca o tabuleiro do computador, acompanha turnos e resultados, vê o ataque automático adversário e encerra ou reinicia a partida com clareza.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Início do combate na batalha
 
@@ -50,7 +50,7 @@ Selecionar uma coordenada já atacada pelo jogador MUST ser rejeitado sem regist
 
 ### Requirement: Indicação e bloqueio de turno
 
-A tela de batalha SHALL informar de quem é o turno. O tabuleiro do computador MUST aceitar ataques somente no turno do jogador e MUST permanecer bloqueado enquanto o computador joga ou após o encerramento.
+A tela de batalha SHALL informar de quem é o turno. Durante a espera pelo contra-ataque, a tela SHALL indicar em texto que o computador está atacando. O tabuleiro do computador MUST aceitar ataques somente no turno do jogador e MUST permanecer bloqueado enquanto o computador joga ou após o encerramento.
 
 #### Scenario: Turno do jogador
 
@@ -62,9 +62,14 @@ A tela de batalha SHALL informar de quem é o turno. O tabuleiro do computador M
 - **WHEN** o jogador conclui um ataque válido sem encerrar a partida
 - **THEN** a tela informa que é a vez do computador e o tabuleiro do computador não aceita novos ataques
 
+#### Scenario: Espera pelo computador
+
+- **WHEN** o jogador conclui um ataque válido e o computador ainda não realizou o contra-ataque
+- **THEN** a tela exibe em texto que o computador está atacando e o tabuleiro do computador segue bloqueado durante todo o atraso
+
 ### Requirement: Ataque automático do computador
 
-Após um ataque válido do jogador que não encerre a partida, o computador SHALL atacar automaticamente uma coordenada que ainda não atacou, sem exigir ação do jogador. O resultado MUST aparecer no tabuleiro do jogador e o turno MUST voltar ao jogador, salvo se o computador vencer.
+Após um ataque válido do jogador que não encerre a partida, o computador SHALL atacar automaticamente, depois de um atraso perceptível, uma coordenada que ainda não atacou, sem exigir ação do jogador. O resultado MUST aparecer no tabuleiro do jogador e o turno MUST voltar ao jogador, salvo se o computador vencer.
 
 #### Scenario: Computador devolve o turno
 
@@ -78,7 +83,7 @@ Após um ataque válido do jogador que não encerre a partida, o computador SHAL
 
 ### Requirement: Feedback acessível dos resultados
 
-Cada célula atacada SHALL ser distinguível por ícone ou rótulo acessível além da cor. A destruição de uma embarcação MUST ser anunciada em texto com o tipo atingido. O tabuleiro adversário MUST manter apenas as células efetivamente atingidas, sem revelar as demais posições da embarcação destruída.
+Cada célula atacada SHALL ser distinguível por ícone ou rótulo acessível além da cor. A destruição de uma embarcação MUST ser anunciada em texto com o tipo atingido, e todas as células dessa embarcação MUST passar a exibir o resultado de embarcação destruída, mostrando a embarcação completa no mapa dos dois lados. O tabuleiro adversário MUST continuar ocultando as embarcações ainda não destruídas.
 
 #### Scenario: Célula atacada tem rótulo acessível
 
@@ -88,7 +93,12 @@ Cada célula atacada SHALL ser distinguível por ícone ou rótulo acessível al
 #### Scenario: Destruição anunciada
 
 - **WHEN** uma embarcação do computador é destruída
-- **THEN** um aviso em texto informa qual tipo foi destruído e as posições não atingidas não são reveladas
+- **THEN** um aviso em texto informa qual tipo foi destruído, todas as células daquela embarcação aparecem marcadas como destruídas no mapa e as embarcações ainda não destruídas permanecem ocultas
+
+#### Scenario: Embarcação destruída própria aparece completa
+
+- **WHEN** o computador destrói uma embarcação da frota do jogador
+- **THEN** todas as células daquela embarcação aparecem marcadas como destruídas no tabuleiro do jogador, mantendo as demais embarcações visíveis
 
 ### Requirement: Tabuleiro próprio durante a batalha
 

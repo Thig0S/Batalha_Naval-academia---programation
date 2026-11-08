@@ -11,6 +11,7 @@ import {
 import { TABULEIRO_VAZIO, Tabuleiro } from '../core/tabuleiro';
 import {
   EstadoCombate,
+  LadoDoCombate,
   Participante,
   ResultadoAtaque,
   atacar,
@@ -22,7 +23,7 @@ import { Coordenada } from '../core/coordenada';
 import { ALEATORIO } from './aleatorio';
 
 /** Atraso, em milissegundos, entre o ataque do jogador e a retaliação do computador. */
-export const ATRASO_COMPUTADOR_MS = 700;
+export const ATRASO_COMPUTADOR_MS = 1200;
 
 /** Fases da partida, na ordem do fluxo do jogo. */
 export type Fase = 'apresentacao' | 'preparacao' | 'batalha';
@@ -88,6 +89,18 @@ export class PartidaStore {
   readonly tiposDestruidosDoJogador = computed(() => {
     const estado = this._estadoCombate();
     return estado === null ? [] : tiposDestruidos(estado.jogador);
+  });
+
+  /** Embarcações do computador destruídas por inteiro, para exibir a embarcação completa no mapa. */
+  readonly embarcacoesDestruidasDoComputador = computed(() => {
+    const estado = this._estadoCombate();
+    return estado === null ? [] : this.destruidasDo(estado.computador);
+  });
+
+  /** Embarcações do jogador destruídas por inteiro, exibidas completas no tabuleiro próprio. */
+  readonly embarcacoesDestruidasDoJogador = computed(() => {
+    const estado = this._estadoCombate();
+    return estado === null ? [] : this.destruidasDo(estado.jogador);
   });
 
   /** Indica se há combate em andamento: criado e ainda sem vencedor. */
@@ -190,6 +203,16 @@ export class PartidaStore {
     this.cancelarAtaqueAgendado();
     this._estadoCombate.set(null);
     this.iniciarPartida();
+  }
+
+  /**
+   * Embarcações do lado defensor que perderam todas as posições, devolvidas como objetos
+   * completos para a apresentação mostrar a embarcação destruída no mapa. Reaproveita
+   * `tiposDestruidos` do domínio; nenhuma regra de combate é duplicada ou alterada.
+   */
+  private destruidasDo(lado: LadoDoCombate): Embarcacao[] {
+    const destruidas = new Set(tiposDestruidos(lado));
+    return lado.tabuleiro.embarcacoes.filter((embarcacao) => destruidas.has(embarcacao.tipo));
   }
 
   /** Agenda o ataque do computador com atraso, substituindo qualquer agendamento anterior. */

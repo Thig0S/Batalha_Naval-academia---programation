@@ -64,10 +64,15 @@ export class Batalha {
     () => this.store.combateAtivo() && this.store.turno() === 'jogador',
   );
 
+  /** Espera pelo contra-ataque: a região viva avisa em texto enquanto o computador joga. */
+  protected readonly aguardandoComputador = computed(
+    () => this.store.combateAtivo() && this.store.turno() === 'computador',
+  );
+
   /**
    * Clique no tabuleiro adversário: um ataque válido registra o tiro (a store agenda a
    * retaliação) e uma rejeição apenas mostra o motivo, sem consumir o turno. Uma destruição
-   * é anunciada em texto com o tipo atingido, sem revelar as demais posições.
+   * é anunciada em texto com o tipo atingido e a embarcação aparece completa no mapa.
    */
   protected aoClicarNoAdversario(celula: Coordenada): void {
     const resultado = this.store.atacarJogador(celula);

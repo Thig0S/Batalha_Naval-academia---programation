@@ -154,6 +154,8 @@ describe('PartidaStore', () => {
     expect(store.tirosRecebidosPeloComputador()).toEqual([]);
     expect(store.tiposDestruidosDoComputador()).toEqual([]);
     expect(store.tiposDestruidosDoJogador()).toEqual([]);
+    expect(store.embarcacoesDestruidasDoComputador()).toEqual([]);
+    expect(store.embarcacoesDestruidasDoJogador()).toEqual([]);
     expect(store.combateAtivo()).toBe(false);
   });
 
@@ -167,6 +169,8 @@ describe('PartidaStore', () => {
     expect(store.tirosRecebidosPeloJogador()).toEqual([]);
     expect(store.tirosRecebidosPeloComputador()).toEqual([]);
     expect(store.tiposDestruidosDoComputador()).toEqual([]);
+    expect(store.embarcacoesDestruidasDoComputador()).toEqual([]);
+    expect(store.embarcacoesDestruidasDoJogador()).toEqual([]);
   });
 
   it('registra um ataque do jogador na água e devolve a vez ao computador', async () => {
@@ -199,6 +203,7 @@ describe('PartidaStore', () => {
       expect(acerto.tiro.resultado).toBe('acerto');
       expect(acerto.tiro.tipo).toBeUndefined();
       expect(store.tiposDestruidosDoComputador()).toEqual([]);
+      expect(store.embarcacoesDestruidasDoComputador()).toEqual([]);
 
       vi.advanceTimersByTime(ATRASO_COMPUTADOR_MS);
       expect(store.turno()).toBe('jogador');
@@ -210,6 +215,11 @@ describe('PartidaStore', () => {
       expect(destruido.tiro.resultado).toBe('destruido');
       expect(destruido.tiro.tipo).toBe('destroyer');
       expect(store.tiposDestruidosDoComputador()).toEqual(['destroyer']);
+      // a embarcação destruída é exposta por inteiro, com todas as suas posições
+      expect(store.embarcacoesDestruidasDoComputador()).toEqual([destroyer]);
+      expect(coordenadasDe(store.embarcacoesDestruidasDoComputador()[0])).toEqual(
+        coordenadasDe(destroyer),
+      );
       expect(store.tirosRecebidosPeloComputador()).toHaveLength(2);
     } finally {
       vi.useRealTimers();
@@ -268,6 +278,7 @@ describe('PartidaStore', () => {
     const store = await criarBatalha();
     vi.useFakeTimers();
     try {
+      expect(ATRASO_COMPUTADOR_MS).toBe(1200); // atraso perceptível, exportado para os testes
       atacarValido(store, celulaLivreDoComputador(store));
 
       expect(store.tirosRecebidosPeloJogador()).toHaveLength(0);

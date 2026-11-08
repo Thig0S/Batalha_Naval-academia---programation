@@ -45,8 +45,9 @@ const CLASSES_DE_RESULTADO: Record<ResultadoTiro, string> = {
 
 /**
  * Componente de apresentação do tabuleiro 10 × 10, burro em inputs e outputs.
- * No modo `adversario` as embarcações nunca são reveladas: o mapa de células ocupadas
- * nem é derivado quando o modo não revela. Os tiros são renderizados em qualquer modo.
+ * No modo `adversario` somente as embarcações passadas em `embarcacoesDestruidas`
+ * são reveladas (sempre por inteiro, já destruídas); as demais seguem ocultas.
+ * Os tiros são renderizados em qualquer modo.
  */
 @Component({
   selector: 'app-tabuleiro',
@@ -62,6 +63,12 @@ export class Tabuleiro {
 
   /** Ataques recebidos pelo tabuleiro, exibidos com seu resultado por célula. */
   readonly tirosRecebidos = input<readonly Tiro[]>([]);
+
+  /**
+   * Embarcações já destruídas, exibidas completas no mapa em qualquer modo.
+   * No modo `adversario` é a única fonte de revelação de embarcação.
+   */
+  readonly embarcacoesDestruidas = input<readonly Embarcacao[]>([]);
 
   /** Indica se os cliques contam: somente a batalha e a preparação são interativas. */
   readonly interativo = input(false);
@@ -93,6 +100,17 @@ export class Tabuleiro {
       }
     }
 
+    // Embarcações destruídas aparecem completas nos dois lados; no modo adversário
+    // elas são a única embarcação revelada no mapa.
+    const destruidasPorChave = new Map<string, TipoEmbarcacao>();
+    for (const embarcacao of this.embarcacoesDestruidas()) {
+      for (const celula of coordenadasDe(embarcacao)) {
+        const chave = chaveCoordenada(celula);
+        destruidasPorChave.set(chave, embarcacao.tipo);
+        tipoPorChave.set(chave, embarcacao.tipo);
+      }
+    }
+
     const tiroPorChave = new Map<string, Tiro>();
     for (const tiro of this.tirosRecebidos()) {
       tiroPorChave.set(chaveCoordenada(tiro.coordenada), tiro);
@@ -109,7 +127,11 @@ export class Tabuleiro {
         const chave = chaveCoordenada(coordenada);
         const rotulo = `${letra}${coluna + 1}`;
         const tipo = tipoPorChave.get(chave) ?? null;
-        const resultado = tiroPorChave.get(chave)?.resultado ?? null;
+        // Célula de embarcação destruída sempre exibe o resultado destruída,
+        // mesmo quando o tiro registrado ali foi apenas um acerto.
+        const resultado: ResultadoTiro | null = destruidasPorChave.has(chave)
+          ? 'destruido'
+          : (tiroPorChave.get(chave)?.resultado ?? null);
 
         const naPrevisao = previsao !== null && chavesDaPrevisao.includes(chave);
         const previsaoAtual: 'valido' | 'invalido' | null =
