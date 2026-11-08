@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { Coordenada } from '../../core/coordenada';
+import { Tiro } from '../../core/combate';
 import { Embarcacao } from '../../core/frota';
 import { ModoTabuleiro, PrevisaoDePosicionamento, Tabuleiro } from './tabuleiro';
 
@@ -10,6 +11,19 @@ const ENCOURACADO: Embarcacao = {
   linha: 0,
   coluna: 0,
   orientacao: 'horizontal',
+};
+
+/** Tiro na água em E5, longe de qualquer embarcação do exemplo. */
+const TIRO_AGUA: Tiro = { coordenada: { linha: 4, coluna: 4 }, resultado: 'agua' };
+
+/** Acerto na segunda posição do encouraçado (A2), ainda sem destruição. */
+const TIRO_ACERTO: Tiro = { coordenada: { linha: 0, coluna: 1 }, resultado: 'acerto' };
+
+/** Destruição na última posição do encouraçado (A4), com o tipo informado. */
+const TIRO_DESTRUIDO: Tiro = {
+  coordenada: { linha: 0, coluna: 3 },
+  resultado: 'destruido',
+  tipo: 'encouracado',
 };
 
 /** Entradas do preview para o teste de destaque. */
@@ -23,7 +37,12 @@ const PREVISAO_VALIDA: PrevisaoDePosicionamento = {
 
 async function renderizar(
   modo: ModoTabuleiro,
-  opcoes: { embarcacoes?: readonly Embarcacao[]; previsao?: PrevisaoDePosicionamento | null } = {},
+  opcoes: {
+    embarcacoes?: readonly Embarcacao[];
+    previsao?: PrevisaoDePosicionamento | null;
+    tiros?: readonly Tiro[];
+    interativo?: boolean;
+  } = {},
 ): Promise<ReturnType<typeof TestBed.createComponent<Tabuleiro>>> {
   await TestBed.configureTestingModule({ imports: [Tabuleiro] });
   const fixture = TestBed.createComponent(Tabuleiro);
@@ -33,6 +52,12 @@ async function renderizar(
   }
   if (opcoes.previsao !== undefined) {
     fixture.componentRef.setInput('previsao', opcoes.previsao);
+  }
+  if (opcoes.tiros !== undefined) {
+    fixture.componentRef.setInput('tirosRecebidos', opcoes.tiros);
+  }
+  if (opcoes.interativo !== undefined) {
+    fixture.componentRef.setInput('interativo', opcoes.interativo);
   }
   await fixture.whenStable();
   return fixture;
@@ -46,7 +71,7 @@ function botoes(
 
 describe('Tabuleiro', () => {
   it('renderiza 100 células clicáveis com as coordenadas corretas na ordem', async () => {
-    const fixture = await renderizar('preparacao');
+    const fixture = await renderizar('preparacao', { interativo: true });
     const celulas = botoes(fixture);
 
     expect(celulas).toHaveLength(100);
@@ -57,7 +82,7 @@ describe('Tabuleiro', () => {
   });
 
   it('emite a coordenada clicada e o foco ganho e perdido', async () => {
-    const fixture = await renderizar('preparacao');
+    const fixture = await renderizar('preparacao', { interativo: true });
 
     const clicadas: Coordenada[] = [];
     const focadas: (Coordenada | null)[] = [];
@@ -114,5 +139,68 @@ describe('Tabuleiro', () => {
     ];
 
     expect(destacadas.map((celula) => celula.getAttribute('aria-label'))).toEqual(['B2', 'B3']);
+  });
+
+  it('renderiza cada resultado com fundo, ícone próprio e rótulo acessível além da cor', async () => {
+    const fixture = await renderizar('proprio', {
+      embarcacoes: [ENCOURACADO],
+      tiros: [TIRO_AGUA, TIRO_ACERTO, TIRO_DESTRUIDO],
+    });
+    const celulas = botoes(fixture);
+
+    const agua = celulas[44]; // E5
+    expect(agua.getAttribute('aria-label')).toBe('E5, água');
+    expect(agua.className).toContain('bg-agua/40');
+    expect(agua.querySelector('svg')?.classList.contains('lucide-waves')).toBe(true);
+
+    const acerto = celulas[1]; // A2: encouraçado atingido, ainda de pé
+    expect(acerto.getAttribute('aria-label')).toBe('A2, encouraçado, acerto');
+    expect(acerto.className).toContain('bg-acerto/70');
+    expect(acerto.querySelector('svg')?.classList.contains('lucide-crosshair')).toBe(true);
+
+    const destruido = celulas[3]; // A4: última posição do encouraçado
+    expect(destruido.getAttribute('aria-label')).toBe('A4, encouraçado, embarcação destruída');
+    expect(destruido.className).toContain('bg-destruido');
+    expect(destruido.querySelector('svg')?.classList.contains('lucide-bomb')).toBe(true);
+
+    // Célula sem tiro mantém o comportamento atual, sem ícone de resultado.
+    expect(celulas[4].getAttribute('aria-label')).toBe('A5');
+    expect(celulas[4].querySelector('svg')).toBeNull();
+  });
+
+  it('no modo adversario renderiza os tiros recebidos sem revelar embarcação alguma', async () => {
+    const fixture = await renderizar('adversario', {
+      embarcacoes: [ENCOURACADO],
+      tiros: [TIRO_ACERTO, TIRO_AGUA],
+    });
+    const celulas = botoes(fixture);
+
+    expect(celulas[1].getAttribute('aria-label')).toBe('A2, acerto');
+    expect(celulas[44].getAttribute('aria-label')).toBe('E5, água');
+
+    const comResultado = celulas.filter((celula) =>
+      celula.getAttribute('aria-label')?.includes(', '),
+    );
+    expect(comResultado).toHaveLength(2);
+    for (const celula of celulas) {
+      expect(celula.getAttribute('aria-label')).not.toContain('encouraçado');
+    }
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('button svg')).toHaveLength(2);
+  });
+
+  it('sem o input interativo, as células continuam desabilitadas mesmo com tiros', async () => {
+    const fixture = await renderizar('adversario', { tiros: [TIRO_AGUA] });
+
+    for (const celula of botoes(fixture)) {
+      expect(celula.disabled).toBe(true);
+    }
+  });
+
+  it('com o input interativo, as células aceitam cliques', async () => {
+    const fixture = await renderizar('adversario', { tiros: [TIRO_AGUA], interativo: true });
+
+    for (const celula of botoes(fixture)) {
+      expect(celula.disabled).toBe(false);
+    }
   });
 });

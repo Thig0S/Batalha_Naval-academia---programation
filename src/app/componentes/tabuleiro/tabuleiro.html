@@ -22,14 +22,20 @@
           [class]="celula.classes"
           [attr.aria-label]="celula.rotuloAcessivel"
           [attr.data-previa]="celula.previsao"
-          [disabled]="modo() !== 'preparacao'"
+          [disabled]="!interativo()"
           (click)="celulaSelecionada.emit(celula.coordenada)"
           (focusin)="celulaFocada.emit(celula.coordenada)"
           (focusout)="celulaFocada.emit(null)"
           (pointerenter)="celulaFocada.emit(celula.coordenada)"
           (pointerleave)="celulaFocada.emit(null)"
         >
-          @if (celula.tipo) {
+          @if (celula.resultado === 'destruido') {
+            <svg lucideBomb aria-hidden="true" class="h-3 w-3"></svg>
+          } @else if (celula.resultado === 'acerto') {
+            <svg lucideCrosshair aria-hidden="true" class="h-3 w-3"></svg>
+          } @else if (celula.resultado === 'agua') {
+            <svg lucideWaves aria-hidden="true" class="h-3 w-3"></svg>
+          } @else if (celula.tipo) {
             <svg lucideShip aria-hidden="true" class="h-3 w-3"></svg>
           }
         </button>

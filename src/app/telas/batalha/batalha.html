@@ -1,19 +1,85 @@
 <section class="flex flex-col gap-4">
   <h2 class="text-xl font-bold tracking-tight text-slate-100">Batalha</h2>
 
-  <p class="max-w-prose text-sm text-slate-300">
-    A frota está posicionada. Os tiros, turnos e ataques chegam na próxima fase; por enquanto, os
-    tabuleiros estão somente leitura.
-  </p>
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-300">
+    <p role="status">
+      Turno: <span class="font-semibold text-slate-100">{{ rotuloDoTurno() }}</span>
+    </p>
+    <p>
+      Situação: <span class="font-semibold text-slate-100">{{ rotuloDaSituacao() }}</span>
+    </p>
+    <p>
+      Embarcações destruídas — do computador:
+      <span class="font-semibold text-slate-100"
+        >{{ store.tiposDestruidosDoComputador().length }}/5</span
+      >, da sua frota:
+      <span class="font-semibold text-slate-100"
+        >{{ store.tiposDestruidosDoJogador().length }}/5</span
+      >
+    </p>
+  </div>
+
+  <div aria-live="polite" class="min-h-6 text-sm font-medium text-destruido">
+    @if (aviso(); as avisoAtual) {
+      <p>{{ avisoAtual }}</p>
+    }
+  </div>
 
   <div class="flex flex-col gap-6 md:flex-row">
     <div class="flex w-full flex-col gap-2 md:max-w-lg">
       <h3 class="font-semibold text-slate-100">Sua frota</h3>
-      <app-tabuleiro modo="proprio" [embarcacoes]="embarcacoesDoJogador()" />
+      <app-tabuleiro
+        modo="proprio"
+        [embarcacoes]="embarcacoesDoJogador()"
+        [tirosRecebidos]="store.tirosRecebidosPeloJogador()"
+      />
     </div>
     <div class="flex w-full flex-col gap-2 md:max-w-lg">
       <h3 class="font-semibold text-slate-100">Frota do computador</h3>
-      <app-tabuleiro modo="adversario" />
+      <app-tabuleiro
+        modo="adversario"
+        [tirosRecebidos]="store.tirosRecebidosPeloComputador()"
+        [interativo]="adversarioInterativo()"
+        (celulaSelecionada)="aoClicarNoAdversario($event)"
+      />
     </div>
   </div>
+
+  <ul class="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+    <li class="text-slate-400">Resultados:</li>
+    @for (item of legenda; track item.resultado) {
+      <li class="flex items-center gap-2">
+        @switch (item.resultado) {
+          @case ('agua') {
+            <svg lucideWaves aria-hidden="true" class="h-4 w-4 text-agua"></svg>
+          }
+          @case ('acerto') {
+            <svg lucideCrosshair aria-hidden="true" class="h-4 w-4 text-acerto"></svg>
+          }
+          @case ('destruido') {
+            <svg lucideBomb aria-hidden="true" class="h-4 w-4 text-destruido"></svg>
+          }
+        }
+        <span>{{ item.rotulo }}</span>
+      </li>
+    }
+  </ul>
+
+  @if (store.vencedor(); as vencedor) {
+    <div
+      class="flex flex-col items-start gap-3 rounded-lg border border-tabuleiro-borda bg-slate-900 p-4"
+    >
+      <p role="status" class="text-lg font-semibold text-slate-100">
+        {{ vencedor === 'jogador' ? 'Você venceu a partida!' : 'O computador venceu a partida.' }}
+      </p>
+      <button
+        type="button"
+        (click)="novaPartida()"
+        class="flex w-fit items-center gap-2 rounded-lg bg-acerto px-5 py-3 font-semibold text-slate-950 transition-colors hover:bg-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acerto"
+      >
+        <svg lucideRotateCcw aria-hidden="true" class="h-5 w-5"></svg>
+        Nova partida
+      </button>
+    </div>
+  }
 </section>
